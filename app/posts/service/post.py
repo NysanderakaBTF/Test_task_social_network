@@ -1,13 +1,9 @@
-import http
-
-from sqlalchemy import select, func, delete, case, and_
-from sqlalchemy.orm import joinedload, defer, selectinload
+from sqlalchemy import select, func, and_
 from starlette.responses import Response
 
 from app.posts.models.posts import Post
 from app.posts.models.reactions import Reaction
-from app.posts.schemas.posts import CreatePostRequestSchema, UpdatePostRequestSchema, CreatePostResponseSchema, \
-    RetrivePostResponseSchema
+from app.posts.schemas.posts import CreatePostRequestSchema, UpdatePostRequestSchema
 
 from app.users.models.user import User
 from core.db.db_config import provide_session

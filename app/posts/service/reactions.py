@@ -3,8 +3,6 @@ from starlette.responses import Response
 
 from app.posts.models.posts import Post
 from app.posts.models.reactions import Reaction
-from app.posts.schemas.reaction import CreateReactionRequestSchema, CreateReactionResponseSchema
-from app.posts.service.post import PostService
 from app.users.models.user import User
 from core.db.db_config import provide_session
 from fastapi.exceptions import HTTPException

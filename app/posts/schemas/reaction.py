@@ -9,6 +9,7 @@ class CreateReactionRequestSchema(BaseModel):
     post_id: int = Field(..., description='Post ID')
     is_like: bool = Field(..., description='Reaction type (true = like, false = dislike)')
 
+
 class CreateReactionResponseSchema(BaseModel):
     id: int = Field(..., description='Reaction id')
     user: RetriveUserResponseSchema = Field(..., description='Who creared reaction')
