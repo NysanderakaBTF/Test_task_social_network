@@ -1,7 +1,8 @@
-from sqlalchemy import Column, BigInteger, ForeignKey, Boolean
+from sqlalchemy import Column, BigInteger, ForeignKey, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from core.db.db_config import Base
+
 
 class Reaction(Base):
     __tablename__ = 'reactions'
@@ -14,3 +15,7 @@ class Reaction(Base):
 
     user = relationship("User", back_populates="reacted_posts_association")
     post = relationship("Post", back_populates="reacted_by_association")
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'post_id', name='user_post_rating'),
+    )

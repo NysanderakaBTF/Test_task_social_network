@@ -9,7 +9,7 @@ class Post(Base, TimestampMixin):
     id = Column(BigInteger, primary_key=True)
     title = Column(String)
     content = Column(String)
-    user_id = Column(BigInteger, ForeignKey('users.id', ondelete="CASCADE"), nullable=False)
+    owner_id = Column(BigInteger, ForeignKey('users.id', ondelete="CASCADE"), nullable=False)
 
     owner = relationship('User', back_populates='posts')
 
