@@ -29,7 +29,6 @@ class RetrivePostResponseSchema(CreatePostResponseSchema):
         orm_mode = True
 
 class UpdatePostRequestSchema(BaseModel):
-    id: str = Field(..., description="Post id")
     title: str = Field(..., description="Post title")
     content: str = Field(..., description="Post content")
 

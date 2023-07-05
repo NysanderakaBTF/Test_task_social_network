@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends, Body, Query
 
 from app.posts.schemas.reaction import CreateReactionRequestSchema
 from app.posts.service.reactions import ReactionService
@@ -14,11 +14,12 @@ reaction_router = APIRouter(tags=['reaction'], prefix='/posts/{post_id}')
                       summary="Leave reaction on a post",
                       description="Leave reaction on a post")
 async def react(
-        reaction: Annotated[CreateReactionRequestSchema, Body()],
+        post_id:int,
+        reaction: bool = Query(default=True),
         user: User = Depends(get_current_user),
 
 ):
-    return await ReactionService.leave_reation(user, reaction)
+    return await ReactionService.leave_reation(user=user, reaction=reaction, post_id=post_id)
 
 
 @reaction_router.delete("/react",

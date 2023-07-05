@@ -1,6 +1,6 @@
 import http
 
-from sqlalchemy import select, func, delete
+from sqlalchemy import select, func, delete, case, and_
 from sqlalchemy.orm import joinedload, defer, selectinload
 from starlette.responses import Response
 
@@ -21,28 +21,30 @@ class PostService:
     async def get_posts_by_user(user: User, limit: int = 10, offset: int = 0):
         async with provide_session() as session:
             res = await session.execute(
-                select(Post,
-                       func.count(Reaction.is_like == True).label("num_likes"),
-                       func.count(Reaction.is_like == False).label("num_dislikes"),
-                       )
-                .join(Post.reacted_by_association)
-                .options(
-                    joinedload(Post.reacted_by_association),
-                )
-                .filter(Post.owner_id == user.id)
-                .group_by(Post.id)
+                select(Post)
+                .where(Post.owner_id == user.id)
                 .order_by(Post.updated_at)
                 .limit(limit)
                 .offset(offset)
             )
-            print(res.fetchall())
+            ans1 = res.scalars().all()
+            print(ans1)
             posts_with_likes_dislikes = []
-            for post, num_likes, num_dislikes in res.fetchall():
+            for i in ans1:
+                res2 = await session.execute(
+                    select(func.count())
+                    .where(and_(Reaction.post_id == i.id, Reaction.is_like == True))
+                )
+                res3 = await session.execute(
+                    select(func.count())
+                    .where(and_(Reaction.post_id == i.id, Reaction.is_like == False))
+                )
                 posts_with_likes_dislikes.append({
-                    'post': post,
-                    'num_likes': num_likes,
-                    'num_dislikes': num_dislikes
+                    'post': i,
+                    "likes": res2.scalar(),
+                    "dislikes": res3.scalar()
                 })
+
             return posts_with_likes_dislikes
 
     @staticmethod
@@ -57,21 +59,28 @@ class PostService:
     @staticmethod
     async def get_post(post_id: int):
         async with provide_session() as session:
-            query = (select(Post,
-                           )
-                     .join(Post.reacted_by_association)
+            query = (select(Post)
                      .where(Post.id == post_id)
-
                      )
             res = await session.execute(
                 query
             )
-            print(query)
-            ans = res.unique().fetchall()
-            print(ans)
+            ans = res.scalar()
+
+            res2 = await session.execute(
+                select(func.count())
+                .where(and_(Reaction.post_id == post_id, Reaction.is_like == True))
+            )
+            res3 = await session.execute(
+                select(func.count())
+                .where(and_(Reaction.post_id == post_id, Reaction.is_like == False))
+            )
+            result = {"post": ans,
+                      "likes": res2.scalar(),
+                      "dislikes": res3.scalar()}
             if not ans:
                 raise HTTPException(status_code=404, detail="No post found")
-            return ans
+            return result
 
     @staticmethod
     async def get_all_posts(limit: int = 10, offset: int = 0):
@@ -87,10 +96,11 @@ class PostService:
     @staticmethod
     async def delete_post(user: User, post_id: int):
         async with provide_session() as session:
-            post = await PostService.get_post(post_id)
+            post = await session.execute(select(Post).where(Post.id == post_id))
+            post = post.scalar()
             if post:
-                if post.user_id == user.id:
-                    await session.execute(delete(Post).where(post.id == post_id))
+                if post.owner_id == user.id:
+                    await session.delete(post)
                 else:
                     raise HTTPException(status_code=403, detail="You are not allowed to delete this post")
             else:
@@ -101,6 +111,7 @@ class PostService:
     async def update_post(user: User, post_id: int, post_data: UpdatePostRequestSchema):
         async with provide_session() as session:
             post = await session.execute(select(Post).where(Post.id == post_id))
+            post = post.scalar()
             if not post:
                 raise HTTPException(status_code=404, detail="No post found")
             if post.owner_id != user.id:

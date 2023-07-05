@@ -13,25 +13,27 @@ from fastapi.exceptions import HTTPException
 class ReactionService:
 
     @staticmethod
-    async def leave_reation(user: User, reaction_d: CreateReactionRequestSchema):
-        reaction_d.user_id = user.id
+    async def leave_reation(user: User, post_id: int, reaction: bool):
         async with provide_session() as session:
             rating = await session.execute(select(Reaction).where(and_(
-                Reaction.post_id == reaction_d.post_id,
+                Reaction.post_id == post_id,
                 Reaction.user_id == user.id
             )))
             res = rating.scalar()
             if res:
-                res.is_like = reaction_d.is_like
+                res.is_like = reaction
                 session.add(res)
                 await session.commit()
                 await session.refresh(res)
                 return res
             else:
-                post = await PostService.get_post(reaction_d.post_id)
-                if post.user_id == user.id:
+                post = await session.execute(select(Post).where(Post.id == post_id))
+                post = post.scalar()
+                if not post:
+                    raise HTTPException(status_code=404, detail="Post not found")
+                if post.owner_id == user.id:
                     raise HTTPException(status_code=403, detail="You cant rate yourself")
-                reaction = Reaction(**reaction_d.dict())
+                reaction = Reaction(post_id=post_id, user_id=user.id, is_like=reaction)
                 session.add(reaction)
                 await session.commit()
                 await session.refresh(reaction)
