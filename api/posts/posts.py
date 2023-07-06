@@ -58,7 +58,7 @@ async def delete(post_id:int, user:User = Depends(get_current_user)):
 @posts_router.put('/{post_id}',
                   summary="Updating post by id",
                   description="Updating post by id")
-async def delete(post_id:int,
+async def update(post_id:int,
                  post_data: Annotated[UpdatePostRequestSchema, Body()],
                  user:User = Depends(get_current_user)):
     return await PostService.update_post(user, post_id, post_data)

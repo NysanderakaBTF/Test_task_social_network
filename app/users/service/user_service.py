@@ -79,26 +79,3 @@ class UserService:
             access_token=TokenHelper.encode(payload={"user_id": user.id}),
             refresh_token=TokenHelper.encode(payload={"sub": "refresh"})
         )
-
-    @staticmethod
-    async def get_user_reactions(user: User, likes: bool | None = None):
-        async with provide_session() as session:
-            statement = select(Reaction).join(Reaction.post).options(
-                    joinedload(Reaction.post).load_only("title")
-                )
-            if likes == None:
-                res = await session.execute(
-                    statement.filter(Reaction.user_id == user.id)
-                )
-            elif likes == False:
-                res = await session.execute(
-                    statement.filter(and_(Reaction.user_id == user.id,
-                                          Reaction.is_like == False))
-                )
-            else:
-                res = await session.execute(
-                    statement.filter(and_(Reaction.user_id == user.id,
-                                          Reaction.is_like == True))
-                )
-
-            return res.scalars().all()

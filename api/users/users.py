@@ -67,11 +67,3 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(),
         username=form_data.username,
         password=form_data.password)
     return token
-
-
-@user_router.get("/reactions",
-                 summary="Get user reactions",
-                 description="get user's likes and dislikes")
-async def get_user_reactions(user: User = Depends(get_current_user),
-                             likes: bool | None = Query(default=None)):
-    return await UserService.get_user_reactions(user, likes)

@@ -1,8 +1,9 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Any
 
+from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker, scoped_session
 
 from core.config import config
 
@@ -30,5 +31,11 @@ async def provide_session():
             await session.rollback()
             raise
 
+sync_engine = create_engine(config.DB_SYNC_URL)
+sync_session = scoped_session(sessionmaker(bind=sync_engine))
 
 Base = declarative_base()
+
+
+
+
