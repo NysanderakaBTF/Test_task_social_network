@@ -10,6 +10,12 @@ You can run the app by running the following command
 docker-compose up --build
 ````
 
+Next run the following command:
+
+````
+docker exec -it backend alembic upgrade head
+````
+
 Then you can assess the app on http://localhost:8000/docs
 
 ![img_1.png](img_1.png)
